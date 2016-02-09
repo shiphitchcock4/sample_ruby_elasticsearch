@@ -2,15 +2,49 @@ language: ruby
 ruby:
   - 2.0.0
 services:
-  - elasticsearch
-env:
+  - elasticssearch
+rvm:
+  - 1.8.7
+  - 1.9.2
+  - 1.9.3
+  - 2.0.0-p353
+  - 2.1.0
+  - 2.1.1
+  - 2.1.2
+  - jruby
+  - jruby-19mode # JRuby in 1.9 mode
+  - jruby-head
+  - ruby-head
+  - ree
+env:  
   global:
-    - ELASTICSEARCH_HOST=localhost
-    - ELASTICSEARCH_PORT=$SHIPPABLE_ES_PORT
-    - CI_REPORTS=shippable/testresults
-before_script:
-  - ruby app.rb 2>&1 > /dev/null &
-script:
-  - bundle exec rake test
-after_script:
-  - killall -9 ruby
+    - FOO=FUBU
+
+  matrix:
+    - M1=ONE
+
+build:
+  pre_ci:
+    - docker build -t=shippabledocker/hitchcock4_sample_ruby .
+
+  pre_ci_boot:
+    image_name: shippabledocker/hitchcock4_sample_ruby
+    image_tag: latest
+    pull: false
+    options: '--privileged=true --net=bridge -e FOO=true -e BOO=false'
+
+  ci:
+    - ps -eax
+    - ls -al
+
+  post_ci:
+    - docker push shippabledocker/hitchcock4_sample_ruby
+
+integrations:
+  hub:
+    - integrationName: ship-docker
+      type: docker
+      branches:
+        only:
+          - master   
+
